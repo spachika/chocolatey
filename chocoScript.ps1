@@ -34,6 +34,7 @@ $nuspecFile = @"
     <version>{1}</version>
     <authors>{2}</authors>
     <owners>BNY Mellon</owners>
+    <requireLicenseAcceptance>false</requireLicenseAcceptance>
     <description>Installation of package {0}</description>
   </metadata>
   <files>
