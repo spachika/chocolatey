@@ -11,18 +11,32 @@
 # Share folder path or url if binary size is more than 1 GB
 # Silent Arguments
 ################################################################################################
-$PackageName=Read-Host -Prompt 'Package Name' # Choco package name which we are creating
+$PackageName=Read-Host -Prompt 'Package Name' # Choco package name to be created
 
-$repoSearch = choco search $PackageName | FT -AutoSize
+########### Searches source lists to find out packages related to given package name ###########
+$repoSearch = choco search $PackageName 
+$packagesFound = $repoSearch | Select-String -Pattern "^[0-9]* packages"
+$NofPackages = $packagesFound.ToString().Split(' ');
 
-if($repoSearch -ne '')
+if($NofPackages[0] -ne 0)
 {
-Write-Host 'given package name' $PackageName -ForegroundColor Yellow
-Write-Host 'Following packages are available on Repo with this name' -ForegroundColor DarkYellow
-Write-Host $repoSearch -ForegroundColor Green | Format-Table
+
+foreach ($item in $repoSearch)
+{
+$props = $item.Split(' ');
+Write-Host $props[0]     "|"     $props[1]
 }
-$userChoice = Read-Host -Prompt 'Do you still want to create a package, Valid Input Yes|No'
-if($userChoice -like ('Yes'-or'yes'))
+
+$userChoice = Read-Host -Prompt 'If you are unable to find the package in the repo, Key in Yes to continue with package creation Else No. Valid Input Yes|No'
+
+}
+else
+{
+$userChoice = 'Yes'
+
+}
+###################################################################################################
+if($userChoice.ToLower() -like ('yes'))
 {
 $PackageVersion = ''
 
@@ -44,7 +58,6 @@ $PackageVersion = Read-Host -Prompt 'Enter Version Number'
 ######Calculates Folder size of binary and prompts user to do necessary changes#########
 
 $BinaryPath = Read-Host -Prompt 'Exact Path for binary' # Stores path for binary
-
 
 $BinariesSize = ("{0:N2} MB" -f ((Get-ChildItem $BinaryPath -Recurse | Measure-Object -Property Length -Sum -ErrorAction Stop).Sum / 1MB)).Split(" ")
 Write-Output $BinariesSize[0]
@@ -143,7 +156,7 @@ $installPSfileString= @"
 
 `$packageArgs = `@{
   packageName   = `$packageName
-  fileType      = '$BinaryExtensionCheck[1].ToUpper()'
+  fileType      = $BinaryExtensionCheck[1].ToUpper()
   file         =  `$fileLocation
   checksum      = '$BinaryFileHashValue'
   checksumType  = 'sha256' 
